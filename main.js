@@ -21,12 +21,13 @@ class DinoGame {
     this.gameOverEl = document.getElementById('game-over');
     this.finalScoreEl = document.getElementById('final-score');
     this.retryBtn = document.getElementById('retry-btn');
+    this.voiceMeterBar = document.getElementById('voice-meter-bar');
     
     this.obstacles = [];
     this.score = 0;
     this.gameOver = false;
-    this.gravity = 0.5;
-    this.jumpForce = 10;
+    this.gravity = 0.8;
+    this.jumpForce = 17;
     this.velocityY = 0;
     this.isJumping = false;
     this.micVolume = 0;
@@ -90,8 +91,15 @@ class DinoGame {
     this.score++;
     if (this.scoreEl) this.scoreEl.innerText = Math.floor(this.score / 10);
     
-    // Jump (Shout) - Threshold 20
-    if (this.micVolume > 20 && !this.isJumping) {
+    // Update Voice Meter
+    if (this.voiceMeterBar) {
+        // scale up a bit for visibility, clamp at 100%
+        const height = Math.min(this.micVolume * 2.5, 100); 
+        this.voiceMeterBar.style.height = `${height}%`;
+    }
+
+    // Jump (Shout) - Threshold 15
+    if (this.micVolume > 15 && !this.isJumping) {
       this.velocityY = this.jumpForce;
       this.isJumping = true;
     }
@@ -143,12 +151,12 @@ class DinoGame {
   spawnObstacle() {
       const obstacleEl = document.createElement('div');
       obstacleEl.className = 'obstacle';
-      obstacleEl.style.left = '300px'; // Start off-screen right
+      obstacleEl.style.left = '500px'; // Start off-screen right
       this.container.appendChild(obstacleEl);
       
       this.obstacles.push({
         element: obstacleEl,
-        x: 300
+        x: 500
       });
   }
   
