@@ -2,6 +2,17 @@
 import { MindARThree } from 'mindar-face-three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+const loadTexture = (path) => {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.TextureLoader();
+    loader.load(path, (texture) => {
+      resolve(texture);
+    }, undefined, (err) => {
+      reject(err);
+    });
+  });
+}
+
 const loadGlTF = (path) => {
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
@@ -41,6 +52,16 @@ const loadGlTF = (path) => {
 
          const anchor = mindarThree.addAnchor(168);
          anchor.group.add(glasses.scene);
+
+        const logoTexture = await loadTexture('/assets/2D/logo.png');
+        const logoMaterial = new THREE.MeshBasicMaterial({ map: logoTexture, transparent: true });
+        const logoGeometry = new THREE.PlaneGeometry(1, 1);
+        const logoMesh = new THREE.Mesh(logoGeometry, logoMaterial);
+        logoMesh.scale.set(0.3, 0.3, 0.3);
+        logoMesh.position.z = 0.05;
+
+        const cheekAnchor = mindarThree.addAnchor(411);
+        cheekAnchor.group.add(logoMesh);
 
 
         await mindarThree.start();
