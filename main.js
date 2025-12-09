@@ -13,6 +13,154 @@ const loadTexture = (path) => {
   });
 }
 
+class DinoGame {
+  constructor() {
+    this.container = document.getElementById('game-container');
+    this.playerEl = document.getElementById('player');
+    this.scoreEl = document.getElementById('score');
+    this.gameOverEl = document.getElementById('game-over');
+    this.finalScoreEl = document.getElementById('final-score');
+    this.retryBtn = document.getElementById('retry-btn');
+    
+    this.obstacles = [];
+    this.score = 0;
+    this.gameOver = false;
+    this.gravity = 0.5;
+    this.jumpForce = 10;
+    this.velocityY = 0;
+    this.isJumping = false;
+    this.micVolume = 0;
+    
+    // Player state (pixels)
+    this.playerY = 0;
+    
+    this.setupAudio();
+    
+    this.retryBtn.addEventListener('click', () => {
+      this.resetGame();
+    });
+  }
+  
+  resetGame() {
+    this.gameOver = false;
+    this.score = 0;
+    this.velocityY = 0;
+    this.isJumping = false;
+    this.playerY = 0;
+    this.playerEl.style.bottom = '0px';
+    
+    // Remove all obstacles
+    this.obstacles.forEach(obs => obs.element.remove());
+    this.obstacles = [];
+    
+    this.gameOverEl.style.display = 'none';
+  }
+  
+  async setupAudio() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      const javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+      
+      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 1024;
+      
+      microphone.connect(analyser);
+      analyser.connect(javascriptNode);
+      javascriptNode.connect(audioContext.destination);
+      
+      javascriptNode.onaudioprocess = () => {
+        const array = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(array);
+        let values = 0;
+        for (let i = 0; i < array.length; i++) values += array[i];
+        this.micVolume = values / array.length;
+      };
+    } catch(e) {
+      console.error('Mic access denied', e);
+    }
+  }
+  
+  update() {
+    if (this.gameOver) return;
+    
+    // Score
+    this.score++;
+    if (this.scoreEl) this.scoreEl.innerText = Math.floor(this.score / 10);
+    
+    // Jump (Shout) - Threshold 20
+    if (this.micVolume > 20 && !this.isJumping) {
+      this.velocityY = this.jumpForce;
+      this.isJumping = true;
+    }
+    
+    // Physics
+    this.playerY += this.velocityY;
+    if (this.playerY > 0) {
+      this.velocityY -= this.gravity;
+    } else {
+      this.playerY = 0;
+      this.velocityY = 0;
+      this.isJumping = false;
+    }
+    this.playerEl.style.bottom = `${this.playerY}px`;
+    
+    // Obstacles
+    if (this.score % 100 === 0) { // Spawn rate
+        this.spawnObstacle();
+    }
+    
+    // Move Obstacles & Collision
+    const playerRect = this.playerEl.getBoundingClientRect();
+    
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+        const obs = this.obstacles[i];
+        obs.x -= 3; // Speed (pixels)
+        obs.element.style.left = `${obs.x}px`;
+        
+        // Collision Detection (2D AABB)
+        const obsRect = obs.element.getBoundingClientRect();
+        
+        if (
+          playerRect.left < obsRect.right &&
+          playerRect.right > obsRect.left &&
+          playerRect.top < obsRect.bottom &&
+          playerRect.bottom > obsRect.top
+        ) {
+          this.endGame();
+        }
+        
+        // Cleanup
+        if (obs.x < -30) {
+            obs.element.remove();
+            this.obstacles.splice(i, 1);
+        }
+    }
+  }
+  
+  spawnObstacle() {
+      const obstacleEl = document.createElement('div');
+      obstacleEl.className = 'obstacle';
+      obstacleEl.style.left = '300px'; // Start off-screen right
+      this.container.appendChild(obstacleEl);
+      
+      this.obstacles.push({
+        element: obstacleEl,
+        x: 300
+      });
+  }
+  
+  endGame() {
+      this.gameOver = true;
+      if (this.gameOverEl) {
+        this.gameOverEl.style.display = 'block';
+        this.finalScoreEl.innerText = Math.floor(this.score / 10);
+      }
+  }
+}
+
 const loadGlTF = (path) => {
   return new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
@@ -63,9 +211,13 @@ const loadGlTF = (path) => {
         const cheekAnchor = mindarThree.addAnchor(411);
         cheekAnchor.group.add(logoMesh);
 
+        const game = new DinoGame();
 
         await mindarThree.start();
-        renderer.setAnimationLoop(() => { renderer.render(scene, camera);});
+        renderer.setAnimationLoop(() => { 
+          renderer.render(scene, camera);
+          game.update();
+        });
     };
 
     start();

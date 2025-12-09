@@ -12,15 +12,91 @@
 </script>
 
 <script src="./main.js" type="module"></script>
-<style html, body {
-        position: relative;
-        margin: 0;
-        width: 100%, height: 100%;
-        oveflow: hidden;
-
-    }>
-
+<style>
+  html, body {
+    position: relative;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  #score-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-family: monospace;
+    font-size: 24px;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+  }
+  #game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: monospace;
+    font-size: 48px;
+    color: red;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+    z-index: 101;
+    text-align: center;
+  }
+  #game-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 99;
+  }
+  #player {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-image: url('./assets/2D/logo.png');
+    background-size: cover;
+    background-position: center;
+  }
+  .obstacle {
+    position: absolute;
+    bottom: 0;
+    width: 30px;
+    height: 30px;
+    background-color: red;
+  }
+  #retry-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 20px;
+    background: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
 </style>
 </head>
+<body>
+  <div id="game-container">
+    <div id="player"></div>
+  </div>
+  <div id="score-container">Score: <span id="score">0</span></div>
+  <div id="game-over">
+    GAME OVER<br>
+    <span style="font-size:24px; color:white;">Score: <span id="final-score">0</span></span><br>
+    <button id="retry-btn">Retry</button>
+  </div>
 
 </html>
