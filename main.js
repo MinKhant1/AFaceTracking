@@ -34,6 +34,7 @@ class DinoGame {
     
     // Player state (pixels)
     this.playerY = 0;
+    this.rotation = 0;
     
     this.setupAudio();
     
@@ -48,7 +49,9 @@ class DinoGame {
     this.velocityY = 0;
     this.isJumping = false;
     this.playerY = 0;
+    this.rotation = 0;
     this.playerEl.style.bottom = '0px';
+    this.playerEl.style.transform = 'rotate(0deg)';
     
     // Remove all obstacles
     this.obstacles.forEach(obs => obs.element.remove());
@@ -108,15 +111,20 @@ class DinoGame {
     this.playerY += this.velocityY;
     if (this.playerY > 0) {
       this.velocityY -= this.gravity;
+      // Spin while in air
+      this.rotation += 15;
     } else {
       this.playerY = 0;
       this.velocityY = 0;
       this.isJumping = false;
+      // Snap to 0 when grounded
+      this.rotation = 0;
     }
     this.playerEl.style.bottom = `${this.playerY}px`;
+    this.playerEl.style.transform = `rotate(${this.rotation}deg)`;
     
     // Obstacles
-    if (this.score % 100 === 0) { // Spawn rate
+    if (this.score % 150 === 0) { // Spawn rate
         this.spawnObstacle();
     }
     
@@ -128,14 +136,20 @@ class DinoGame {
         obs.x -= 3; // Speed (pixels)
         obs.element.style.left = `${obs.x}px`;
         
-        // Collision Detection (2D AABB)
+        // Collision Detection (2D AABB) with reduced hit box
         const obsRect = obs.element.getBoundingClientRect();
         
+        // Shrink player hitbox by 10px on each side
+        const pLeft = playerRect.left + 10;
+        const pRight = playerRect.right - 10;
+        const pTop = playerRect.top + 10;
+        const pBottom = playerRect.bottom - 10;
+        
         if (
-          playerRect.left < obsRect.right &&
-          playerRect.right > obsRect.left &&
-          playerRect.top < obsRect.bottom &&
-          playerRect.bottom > obsRect.top
+          pLeft < obsRect.right &&
+          pRight > obsRect.left &&
+          pTop < obsRect.bottom &&
+          pBottom > obsRect.top
         ) {
           this.endGame();
         }
