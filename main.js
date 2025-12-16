@@ -163,14 +163,15 @@ class DinoGame {
   }
   
   spawnObstacle() {
+      const startX = this.container.clientWidth;
       const obstacleEl = document.createElement('div');
       obstacleEl.className = 'obstacle';
-      obstacleEl.style.left = '500px'; // Start off-screen right
+      obstacleEl.style.left = `${startX}px`; 
       this.container.appendChild(obstacleEl);
       
       this.obstacles.push({
         element: obstacleEl,
-        x: 500
+        x: startX
       });
   }
   
